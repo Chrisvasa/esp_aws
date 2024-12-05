@@ -49,14 +49,9 @@ The ESP32 collects temperature and humidity data from the DHT11 sensor at regula
 
 ## 📂 File Structure
 
-- `main.ino`: Main application logic for the ESP32.
+- `main.cpp`: Main application logic for the ESP32.
 - `secrets.h`: Configuration file for Wi-Fi credentials and AWS certificates.
-- `handler.ts` (Lambda function): Processes IoT data and stores it in DynamoDB.
 
 ## 📜 License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
-
-## 📧 Contact
-
-For support or questions, feel free to reach out at [Your Contact Info].
