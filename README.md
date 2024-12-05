@@ -52,6 +52,9 @@ The ESP32 collects temperature and humidity data from the DHT11 sensor at regula
 - `main.cpp`: Main application logic for the ESP32.
 - `secrets.h`: Configuration file for Wi-Fi credentials and AWS certificates.
 
+## 🔗 Related Repositories
+- [AWS Amplify / Frontend](https://github.com/Chrisvasa/amplify-react)
+
 ## 📜 License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
