@@ -3,10 +3,14 @@
 #include <MQTTClient.h>
 #include <ArduinoJson.h>
 #include "WiFi.h"
+#include "DHT.h" // Include DHT library
 
 // The MQTT topics that this device should publish/subscribe
 #define AWS_IOT_PUBLISH_TOPIC "/telemetry"
 #define AWS_IOT_SUBSCRIBE_TOPIC "/downlink"
+
+#define DHTPIN 4          // Pin where the DHT sensor is connected
+#define DHTTYPE DHT11     // DHT 11 sensor type
 
 long sendInterval = 10000;  // interval at which to send to AWS
 
@@ -14,6 +18,8 @@ String THINGNAME = "CC8DA26A65CC";
 
 WiFiClientSecure net = WiFiClientSecure();
 MQTTClient client = MQTTClient(1024);
+
+DHT dht(DHTPIN, DHTTYPE); // Initialize DHT sensor
 
 void messageHandler(String &topic, String &payload);
 void updateSettings(JsonDocument settingsObj);
@@ -75,7 +81,6 @@ void connectAWS() {
 void setupShadow() {
   client.subscribe("$aws/things/" + THINGNAME + "/shadow/get/accepted");
   client.subscribe("$aws/things/" + THINGNAME + "/shadow/get/rejected");
-  //client.subscribe("$aws/things/" + THINGNAME + "/shadow/update/accepted");
   client.subscribe("$aws/things/" + THINGNAME + "/shadow/update/delta");
 
   client.publish("$aws/things/" + THINGNAME + "/shadow/get");
@@ -118,6 +123,7 @@ void updateSettings(JsonDocument settingsObj) {
 
 void setup() {
   Serial.begin(115200);
+  dht.begin(); // Initialize the DHT sensor
   delay(2000);
   connectAWS();
   setupShadow();
@@ -129,12 +135,25 @@ void loop() {
   client.loop();
 
   if (millis() - previousMillis >= sendInterval) {
-    // save the last time you sent
     previousMillis = millis();
 
-    bool sendResult = publishTelemetry("{\"temperature\":" + String(random(15.0, 30.0)) + ",\"humidity\":" + String(random(50, 90)) + "}");
+    float temperature = dht.readTemperature();
+    float humidity = dht.readHumidity();
+
+    // Check if the readings are valid
+    if (isnan(temperature) || isnan(humidity)) {
+      Serial.println("Failed to read from DHT sensor!");
+      return;
+    }
+
+    // Construct the telemetry payload
+    String payload = "{\"temperature\":" + String(temperature, 1) +
+                     ",\"humidity\":" + String(humidity, 1) + "}";
+    bool sendResult = publishTelemetry(payload);
+
     // Restart if send failed
-    if (sendResult == 0)
+    if (!sendResult) {
       ESP.restart();
+    }
   }
 }
